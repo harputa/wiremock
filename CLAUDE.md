@@ -41,6 +41,12 @@ Fixture metadata (`<ref>.properties`): `status` (100–599, default 200), `delay
 
 `MockServerIntegrationTest` is a `@SpringBootTest` that sets `mock.wiremock-port=0` (random port) and uses the real `./mock-data` fixtures. It sends real HTTP requests to `wireMock.port()`. The assertions check fixture contents (e.g. product `2000` contains "Laptop Pro 14", `2999` returns 503 via its `.properties`), so changing those fixtures will break tests.
 
+## Playwright e2e suite (`e2e/`)
+
+API-only Playwright tests in TypeScript. They don't use a browser. Run them from `e2e/` with `npm install`, then `npm test`, or for a single file, `npx playwright test tests/wiremock/routing.spec.ts`. `npm run typecheck` runs `tsc`. The config auto-starts `mvn spring-boot:run` from the repo root unless `:8080/actuator/health` is already up, so `JAVA_HOME` must point at JDK 21 (see above).
+- Tests are **generated from `mock-data/`**. `support/mock-data.ts` mirrors the server's discovery rules: the safe-name pattern, max depth 10, the `.properties` metadata, and the top-level-folder header. If you change those rules in `FileMockDataRepository` or `MockDomain`, change them there too.
+- Project order is `setup` → `wiremock` (parallel) → `admin` (serial). Reload calls `resetAll()` and then re-adds the stubs, so mock requests made during a reload get 404. Keep reload tests in the `admin` project.
+
 ## Commit hook
 
 Commits run Gitleaks on the staged changes through `.githooks/pre-commit`. It is enabled by `scripts/install-gitleaks.sh` (Linux, macOS, Git Bash) or `scripts/install-gitleaks.ps1` (Windows). Both install the pinned version into `.tools/gitleaks/` and set local `core.hooksPath`, so keep `VERSION` in sync between the two scripts. A blocked commit means a secret was found. Fix the secret; don't bypass the hook with `--no-verify`. To run the hook manually: `& "C:\Program Files\Git\bin\sh.exe" .githooks/pre-commit`.

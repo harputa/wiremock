@@ -145,6 +145,50 @@ Scan on demand:
 
 `mvn test` runs HTTP integration tests against an embedded WireMock instance on a random port. Tests assume the project root is the current working directory and use the real `./mock-data` fixtures. They cover folder and subfolder endpoints, header naming, error cases, path traversal, and activating a new subfolder through `POST /admin/reload`. That last test creates and removes a temporary folder under `mock-data/customers/`.
 
+## Playwright API tests (`e2e/`)
+
+An end-to-end suite runs against the real service over HTTP: the WireMock mock endpoints (`:9090`) and the Spring Boot admin and actuator endpoints (`:8080`). It is **driven by `mock-data/`**. The suite reads the folder tree with the same rules as the server, so every fixture, folder and subfolder gets its tests automatically. A new fixture or folder needs no test changes.
+
+```
+e2e/
+  playwright.config.ts      projects: setup -> wiremock -> admin; auto-starts the service
+  support/
+    env.ts                  URLs and data directory (overridable via env vars)
+    mock-data.ts            discovers endpoints/fixtures from ../mock-data like the server does
+  tests/
+    global.setup.ts         waits until /admin/status lists every mock-data folder
+    wiremock/
+      fixtures.spec.ts      one test per fixture: status, delay, content type, verbatim body
+      routing.spec.ts       per endpoint: 400 missing/blank header, 404 unknown reference;
+                            header naming, subfolder isolation, path traversal, non-GET
+    admin/
+      admin.spec.ts         actuator health/info, /admin/status, /admin/reload
+                            (incl. activating a new subfolder via reload)
+```
+
+Requires Node.js 18+ and needs no browsers, because these are API tests only.
+
+```bash
+cd e2e
+npm install
+npm test                  # all projects; starts `mvn spring-boot:run` if :8080 is not already up
+npm run test:wiremock     # only the mock endpoint tests
+npm run test:admin        # only the admin endpoint tests
+npm run report            # open the last HTML report
+```
+
+If the service is already running (`mvn spring-boot:run` or `docker compose up`), it is reused. Environment variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `WIREMOCK_URL` | `http://127.0.0.1:9090` | Mock endpoints under test |
+| `ADMIN_URL` | `http://127.0.0.1:8080` | Admin API / actuator under test |
+| `E2E_MOCK_DATA_DIR` | `../mock-data` | Fixture directory used to derive expectations (relative to `e2e/`) |
+| `E2E_NO_SERVER` | unset | `1` = never start the service, only test a running one |
+| `E2E_READONLY_DATA` | unset | `1` = skip the test that creates a temporary folder (e.g. Docker's `:ro` mount) |
+
+The `admin` project runs after the `wiremock` project and serially, because `POST /admin/reload` briefly removes all WireMock stubs while it re-registers them.
+
 ## Implementation notes
 
 - Uses `wiremock-standalone` to isolate WireMock's transitive runtime dependencies from Spring Boot / Jackson.
