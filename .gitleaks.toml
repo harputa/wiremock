@@ -1,0 +1,35 @@
+# Gitleaks configuration for this repository, used by the pre-commit hook in .githooks/.
+# Starts from Gitleaks' built-in rule set and only adds project-specific exclusions.
+
+title = "header-driven-wiremock-service"
+
+[extend]
+useDefault = true
+
+# The built-in generic rule only flags high-entropy values, so short or simple passwords
+# (e.g. "password: 6Hgdt%$dsfdf") slip through. These rules flag ANY literal value assigned to a
+# secret-like key. Placeholders such as ${DB_PASSWORD} are allowed (values starting with "$").
+
+[[rules]]
+id = "hardcoded-config-secret"
+description = "Hard-coded secret in a configuration file; use an ${ENV_VAR} placeholder instead"
+path = '''(?i)\.(ya?ml|properties|env|conf|cfg|ini|toml|xml)$'''
+regex = '''(?i)\b[\w.-]*(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|credentials?)[\w.-]*\s*[:=]\s*["']?([^\s"'#$<>{][^\s"'#<>]{3,})'''
+secretGroup = 1
+keywords = ["password", "passwd", "pwd", "secret", "token", "key", "credential"]
+
+[[rules]]
+id = "hardcoded-code-secret"
+description = "Hard-coded secret string literal in source code; read it from configuration or the environment"
+path = '''(?i)\.(java|kt|groovy|scala|js|ts|py|go|cs|sh|ps1)$'''
+regex = '''(?i)\b\w*(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|credentials?)\w*\s*[:=]\s*["']([^"'\s$]{4,})["']'''
+secretGroup = 1
+keywords = ["password", "passwd", "pwd", "secret", "token", "key", "credential"]
+
+[[allowlists]]
+description = "Build output, IDE files and the locally installed Gitleaks binary"
+paths = [
+    '''(^|/)target/''',
+    '''(^|/)\.idea/''',
+    '''(^|/)\.tools/''',
+]

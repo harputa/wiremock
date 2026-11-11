@@ -1,0 +1,30 @@
+#!/bin/sh
+# Blocks the commit when Gitleaks finds secrets in the staged changes (code and configuration files).
+# Enabled per repository by scripts/install-gitleaks.ps1 (git config --local core.hooksPath .githooks).
+
+repo_root=$(git rev-parse --show-toplevel)
+
+gitleaks="$repo_root/.tools/gitleaks/gitleaks.exe"
+[ -x "$gitleaks" ] || gitleaks="$repo_root/.tools/gitleaks/gitleaks"
+if [ ! -x "$gitleaks" ]; then
+    if command -v gitleaks >/dev/null 2>&1; then
+        gitleaks=gitleaks
+    else
+        echo "pre-commit: Gitleaks is not installed for this repository." >&2
+        echo "Run: powershell -ExecutionPolicy Bypass -File scripts/install-gitleaks.ps1" >&2
+        exit 1
+    fi
+fi
+
+"$gitleaks" git --pre-commit --staged --redact --verbose --no-banner \
+    --config "$repo_root/.gitleaks.toml" "$repo_root"
+status=$?
+
+if [ $status -ne 0 ]; then
+    echo "" >&2
+    echo "pre-commit: commit blocked because Gitleaks reported possible secrets (see above)." >&2
+    echo "  - Remove the secret from the staged files (use environment variables instead), or" >&2
+    echo "  - if it is a false positive, add a 'gitleaks:allow' comment on that line" >&2
+    echo "    or an allowlist entry in .gitleaks.toml." >&2
+fi
+exit $status

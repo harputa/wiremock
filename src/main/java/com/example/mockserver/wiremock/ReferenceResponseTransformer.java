@@ -1,6 +1,5 @@
 package com.example.mockserver.wiremock;
 
-import com.example.mockserver.MockProperties;
 import com.example.mockserver.data.MockDataRepository;
 import com.example.mockserver.data.MockFixtureException;
 import com.example.mockserver.data.MockResponse;
@@ -12,11 +11,9 @@ import java.util.Optional;
 
 public class ReferenceResponseTransformer implements ResponseDefinitionTransformerV2 {
     public static final String NAME = "reference-response-transformer";
-    private final MockProperties configuration;
     private final MockDataRepository repository;
 
-    public ReferenceResponseTransformer(MockProperties configuration, MockDataRepository repository) {
-        this.configuration = configuration;
+    public ReferenceResponseTransformer(MockDataRepository repository) {
         this.repository = repository;
     }
 
@@ -28,16 +25,16 @@ public class ReferenceResponseTransformer implements ResponseDefinitionTransform
 
     @Override
     public ResponseDefinition transform(ServeEvent event) {
-        String domainName = event.getTransformerParameters().getString("domain");
-        MockProperties.Domain domain = configuration.getDomains().get(domainName);
-        if (domain == null) return error(500, "MOCK_CONFIGURATION_ERROR", "Unknown mock domain");
+        String folder = event.getTransformerParameters().getString("folder");
+        if (folder == null || folder.isBlank()) return error(500, "MOCK_CONFIGURATION_ERROR", "Unknown mock domain");
+        MockDomain domain = MockDomain.forFolder(folder);
 
-        String reference = event.getRequest().getHeader(domain.getSelectorHeader());
+        String reference = event.getRequest().getHeader(domain.selectorHeader());
         if (reference == null || reference.isBlank()) {
-            return error(400, "MISSING_REFERENCE", "Required header: " + domain.getSelectorHeader());
+            return error(400, "MISSING_REFERENCE", "Required header: " + domain.selectorHeader());
         }
         try {
-            Optional<MockResponse> result = repository.find(domain.getResponseFolder(), reference);
+            Optional<MockResponse> result = repository.find(domain.folder(), reference);
             if (result.isEmpty()) return error(404, "FIXTURE_NOT_FOUND", "No fixture for requested reference");
             MockResponse response = result.get();
             return new ResponseDefinitionBuilder()
@@ -52,7 +49,7 @@ public class ReferenceResponseTransformer implements ResponseDefinitionTransform
     }
 
     private ResponseDefinition error(int status, String code, String message) {
-        // Strings above are controlled by server configuration, not user-supplied request values.
+        // Strings above come from validated folder names, not user-supplied request values.
         String json = "{\"error\":\"" + code + "\",\"message\":\"" + message + "\"}";
         return new ResponseDefinitionBuilder()
                 .withStatus(status).withHeader("Content-Type", "application/json")

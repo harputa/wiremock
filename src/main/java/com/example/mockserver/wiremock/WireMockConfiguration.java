@@ -14,6 +14,6 @@ public class WireMockConfiguration {
     WireMockServer wireMockServer(MockProperties properties, MockDataRepository repository) {
         return new WireMockServer(wireMockConfig()
                 .port(properties.getWiremockPort())
-                .extensions(new ReferenceResponseTransformer(properties, repository)));
+                .extensions(new ReferenceResponseTransformer(repository)));
     }
 }

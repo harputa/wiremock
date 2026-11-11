@@ -22,15 +22,17 @@ docker compose up --build -d                     # run in Docker (mock-data bind
 
 Environment overrides: `ADMIN_PORT`, `ADMIN_BIND_ADDRESS`, `WIREMOCK_PORT`, `MOCK_DATA_DIR`.
 
+On this machine the jenv `java.exe` shim fails under PowerShell. Run Maven with an explicit JDK 21 instead: `$env:JAVA_HOME="C:\Program Files\Microsoft\jdk-21.0.9.10-hotspot"; $env:PATH="$env:JAVA_HOME\bin;$env:PATH"`. Git Bash commands may also hang here, so prefer PowerShell.
+
 ## Architecture
 
-Request flow: `GET :9090/<path>` + selector header → WireMock stub → `ReferenceResponseTransformer` → `MockDataRepository` (`FileMockDataRepository`) → `mock-data/<response-folder>/<ref>.json` (+ optional `<ref>.properties`).
+Request flow: `GET :9090/<folder>` + `X-<Folder>-Ref` header → WireMock stub → `ReferenceResponseTransformer` → `MockDataRepository` (`FileMockDataRepository`) → `mock-data/<folder>/<ref>.json` (+ optional `<ref>.properties`).
 
 How the pieces connect:
-- `MockProperties` (`mock.*`) holds a map of **domains**. Each domain has `path`, `selector-header` and `response-folder`, and they are defined in `src/main/resources/application.yml`. Adding an endpoint means adding a domain here; no Java code is needed. Config is read once at startup.
+- Endpoints are **discovered from the data directory**, not configured. `FileMockDataRepository.responseFolders()` walks the directory tree (max depth 10) and returns `/`-separated relative paths such as `products` and `products/electronics`. A path is kept only if every segment matches the safe-name pattern. `MockDomain.forFolder` derives the URL `/<full/folder/path>` and a header named after the **top-level** folder only, `X-<Folder>-Ref` (first letter capitalized; HTTP header lookup ignores case). Each endpoint reads fixtures only from its own folder, not from its parent or child folders. `MockProperties` (`mock.*`) holds only `wiremock-port` and `data-directory`.
 - `WireMockConfiguration` creates the `WireMockServer` bean and registers the transformer as an extension. The transformer is **not global** (`applyGlobally=false`).
-- `StubRegistry` (an `ApplicationRunner`) calls `resetAll()` and then registers one `GET urlPathEqualTo(path)` stub per domain, passing the domain name as the transformer parameter `"domain"`. `/admin/reload` reruns the same logic, which re-creates stubs from the *already loaded* config and clears the request journal. It does not re-read `application.yml`.
-- `ReferenceResponseTransformer` resolves the domain, reads the header, and maps outcomes to JSON errors: missing header → 400 `MISSING_REFERENCE`, no fixture → 404 `FIXTURE_NOT_FOUND`, bad metadata or IO error (`MockFixtureException`) → 500 `FIXTURE_READ_ERROR`, unknown domain → 500 `MOCK_CONFIGURATION_ERROR`.
+- `StubRegistry` (an `ApplicationRunner`) rescans the folders, calls `resetAll()`, and registers one `GET urlPathEqualTo("/<folder>")` stub per folder, passing the folder name as the transformer parameter `"folder"`. `/admin/reload` reruns the same logic, so new folders are picked up without a restart. It also clears the request journal.
+- `ReferenceResponseTransformer` rebuilds the `MockDomain` from the `"folder"` parameter, reads the header, and maps outcomes to JSON errors: missing header → 400 `MISSING_REFERENCE`, no fixture → 404 `FIXTURE_NOT_FOUND`, bad metadata or IO error (`MockFixtureException`) → 500 `FIXTURE_READ_ERROR`, missing folder parameter → 500 `MOCK_CONFIGURATION_ERROR`.
 - `FileMockDataRepository` reads files from disk **on every request**, so you can add or edit fixtures without a restart or reload. Both the reference and the folder must match `[A-Za-z0-9_-]{1,100}`, and resolved paths must stay under the base directory (path-traversal guard). Anything invalid becomes "not found" (404), not an error.
 
 Fixture metadata (`<ref>.properties`): `status` (100–599, default 200), `delay-ms` (0–60000, default 0), `content-type` (default `application/json`). Values out of range → 500. The JSON body is returned verbatim.
@@ -38,6 +40,10 @@ Fixture metadata (`<ref>.properties`): `status` (100–599, default 200), `delay
 ## Tests
 
 `MockServerIntegrationTest` is a `@SpringBootTest` that sets `mock.wiremock-port=0` (random port) and uses the real `./mock-data` fixtures. It sends real HTTP requests to `wireMock.port()`. The assertions check fixture contents (e.g. product `2000` contains "Laptop Pro 14", `2999` returns 503 via its `.properties`), so changing those fixtures will break tests.
+
+## Commit hook
+
+Commits run Gitleaks on the staged changes through `.githooks/pre-commit`. It is enabled by `scripts/install-gitleaks.ps1`, which installs into `.tools/gitleaks/` and sets local `core.hooksPath`. A blocked commit means a secret was found. Fix the secret; don't bypass the hook with `--no-verify`. To run the hook manually: `& "C:\Program Files\Git\bin\sh.exe" .githooks/pre-commit`.
 
 ## Security constraints
 

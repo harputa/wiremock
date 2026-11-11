@@ -10,21 +10,5 @@ management:
 
 mock:
   wiremock-port: ${WIREMOCK_PORT:9090}
+  # Every subdirectory of this folder becomes an endpoint: <folder> -> GET /<folder>, header X-<Folder>-Ref
   data-directory: ${MOCK_DATA_DIR:./mock-data}
-  domains:
-    product:
-      path: /products
-      selector-header: X-Product-Ref
-      response-folder: products
-    customer:
-      path: /customers
-      selector-header: X-Customer-Ref
-      response-folder: customers
-    order:
-      path: /orders
-      selector-header: X-Order-Ref
-      response-folder: orders
-    category:
-      path: /categories
-      selector-header: X-Category-Ref
-      response-folder: categories
