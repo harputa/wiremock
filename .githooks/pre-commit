@@ -1,6 +1,7 @@
 #!/bin/sh
 # Blocks the commit when Gitleaks finds secrets in the staged changes (code and configuration files).
-# Enabled per repository by scripts/install-gitleaks.ps1 (git config --local core.hooksPath .githooks).
+# Enabled per repository by scripts/install-gitleaks.sh or scripts/install-gitleaks.ps1
+# (git config --local core.hooksPath .githooks).
 
 repo_root=$(git rev-parse --show-toplevel)
 
@@ -11,7 +12,8 @@ if [ ! -x "$gitleaks" ]; then
         gitleaks=gitleaks
     else
         echo "pre-commit: Gitleaks is not installed for this repository." >&2
-        echo "Run: powershell -ExecutionPolicy Bypass -File scripts/install-gitleaks.ps1" >&2
+        echo "Run: bash scripts/install-gitleaks.sh" >&2
+        echo " or: powershell -ExecutionPolicy Bypass -File scripts/install-gitleaks.ps1" >&2
         exit 1
     fi
 fi

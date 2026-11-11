@@ -43,7 +43,7 @@ Fixture metadata (`<ref>.properties`): `status` (100–599, default 200), `delay
 
 ## Commit hook
 
-Commits run Gitleaks on the staged changes through `.githooks/pre-commit`. It is enabled by `scripts/install-gitleaks.ps1`, which installs into `.tools/gitleaks/` and sets local `core.hooksPath`. A blocked commit means a secret was found. Fix the secret; don't bypass the hook with `--no-verify`. To run the hook manually: `& "C:\Program Files\Git\bin\sh.exe" .githooks/pre-commit`.
+Commits run Gitleaks on the staged changes through `.githooks/pre-commit`. It is enabled by `scripts/install-gitleaks.sh` (Linux, macOS, Git Bash) or `scripts/install-gitleaks.ps1` (Windows). Both install the pinned version into `.tools/gitleaks/` and set local `core.hooksPath`, so keep `VERSION` in sync between the two scripts. A blocked commit means a secret was found. Fix the secret; don't bypass the hook with `--no-verify`. To run the hook manually: `& "C:\Program Files\Git\bin\sh.exe" .githooks/pre-commit`.
 
 ## Security constraints
 

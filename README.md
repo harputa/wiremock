@@ -6,6 +6,7 @@ A standalone Spring Boot 4.1.2 / Java 21 mock REST application with embedded Wir
 
 - Java 21 and Maven 3.9+, **or** Docker with the Docker Compose plugin.
 - Run commands from the **project root** (fixture paths are relative to working directory).
+- After cloning, enable the secret-scanning commit hook once with `bash scripts/install-gitleaks.sh` (Linux, macOS, Git Bash) or `powershell -ExecutionPolicy Bypass -File scripts/install-gitleaks.ps1` (Windows). See [Secret scanning on commit](#secret-scanning-on-commit).
 
 ## Run
 
@@ -116,13 +117,22 @@ Rules (`.gitleaks.toml`):
 - `hardcoded-code-secret`: string literals assigned to secret-like names in source code (e.g. `String apiKey = "..."`).
 - `target/`, `.idea/` and `.tools/` are excluded.
 
-One-time setup per clone (Windows):
+One-time setup per clone:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/install-gitleaks.ps1
+```bash
+bash scripts/install-gitleaks.sh                                  # Linux, macOS, Git Bash on Windows
 ```
 
-This downloads a pinned, checksum-verified Gitleaks into `.tools/gitleaks/` (gitignored) and runs `git config --local core.hooksPath .githooks`, so it affects this repository only. On other systems, install `gitleaks` on your `PATH` and run `git config --local core.hooksPath .githooks`. For a false positive, add a `gitleaks:allow` comment on that line or an allowlist entry in `.gitleaks.toml`.
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-gitleaks.ps1   # Windows PowerShell
+```
+
+| Script | Platform |
+|---|---|
+| `scripts/install-gitleaks.sh` | Linux (x64, arm64, armv6/v7, x32), macOS (Intel, Apple Silicon), Git Bash on Windows |
+| `scripts/install-gitleaks.ps1` | Windows PowerShell (x64) |
+
+Both scripts do the same thing. They download a pinned, checksum-verified Gitleaks (v8.30.1, matching your OS and CPU) into `.tools/gitleaks/` (gitignored) and run `git config --local core.hooksPath .githooks`, so the setup affects this repository only. Re-running them is safe. The bash script needs `curl` or `wget`, `tar` (or `unzip` on Windows), and `sha256sum` or `shasum`. Alternatively, install `gitleaks` on your `PATH` and run `git config --local core.hooksPath .githooks`. `.gitattributes` keeps the shell scripts and hooks on LF line endings. For a false positive, add a `gitleaks:allow` comment on that line or an allowlist entry in `.gitleaks.toml`.
 
 Scan on demand:
 
