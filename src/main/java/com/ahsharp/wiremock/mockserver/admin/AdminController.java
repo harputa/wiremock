@@ -1,6 +1,6 @@
-package com.example.mockserver.admin;
+package com.ahsharp.wiremock.mockserver.admin;
 
-import com.example.mockserver.wiremock.StubRegistry;
+import com.ahsharp.wiremock.mockserver.wiremock.StubRegistry;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
