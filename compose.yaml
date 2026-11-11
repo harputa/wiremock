@@ -1,0 +1,12 @@
+services:
+  mock-service:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080" # Admin API: local machine only
+      - "9090:9090"           # Mock REST endpoints (adjust binding for your network)
+    environment:
+      MOCK_DATA_DIR: /app/mock-data
+      ADMIN_BIND_ADDRESS: 0.0.0.0
+    volumes:
+      - ./mock-data:/app/mock-data:ro
+    restart: unless-stopped
