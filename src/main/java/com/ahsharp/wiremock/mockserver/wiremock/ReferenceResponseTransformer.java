@@ -1,8 +1,8 @@
-package com.example.mockserver.wiremock;
+package com.ahsharp.wiremock.mockserver.wiremock;
 
-import com.example.mockserver.data.MockDataRepository;
-import com.example.mockserver.data.MockFixtureException;
-import com.example.mockserver.data.MockResponse;
+import com.ahsharp.wiremock.mockserver.data.MockDataRepository;
+import com.ahsharp.wiremock.mockserver.data.MockFixtureException;
+import com.ahsharp.wiremock.mockserver.data.MockResponse;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformerV2;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;

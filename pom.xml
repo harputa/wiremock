@@ -7,7 +7,7 @@
         <version>4.1.2</version>
         <relativePath/>
     </parent>
-    <groupId>com.example</groupId>
+    <groupId>com.ahsharp.wiremock</groupId>
     <artifactId>header-driven-wiremock-service</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>header-driven-wiremock-service</name>

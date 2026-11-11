@@ -1,4 +1,4 @@
-package com.example.mockserver;
+package com.ahsharp.wiremock.mockserver;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

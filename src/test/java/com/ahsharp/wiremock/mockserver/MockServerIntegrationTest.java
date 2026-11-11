@@ -1,4 +1,4 @@
-package com.example.mockserver;
+package com.ahsharp.wiremock.mockserver;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import java.net.URI;

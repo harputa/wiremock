@@ -1,4 +1,4 @@
-package com.example.mockserver.wiremock;
+package com.ahsharp.wiremock.mockserver.wiremock;
 
 /**
  * A mock endpoint derived from a response folder. The URL mirrors the full folder path, while the

@@ -1,6 +1,6 @@
-package com.example.mockserver.data;
+package com.ahsharp.wiremock.mockserver.data;
 
-import com.example.mockserver.MockProperties;
+import com.ahsharp.wiremock.mockserver.MockProperties;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;

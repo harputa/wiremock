@@ -1,7 +1,7 @@
-package com.example.mockserver.wiremock;
+package com.ahsharp.wiremock.mockserver.wiremock;
 
-import com.example.mockserver.MockProperties;
-import com.example.mockserver.data.MockDataRepository;
+import com.ahsharp.wiremock.mockserver.MockProperties;
+import com.ahsharp.wiremock.mockserver.data.MockDataRepository;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import java.util.LinkedHashMap;
 import java.util.List;

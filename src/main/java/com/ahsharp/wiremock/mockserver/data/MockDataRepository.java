@@ -1,4 +1,4 @@
-package com.example.mockserver.data;
+package com.ahsharp.wiremock.mockserver.data;
 
 import java.util.List;
 import java.util.Optional;
