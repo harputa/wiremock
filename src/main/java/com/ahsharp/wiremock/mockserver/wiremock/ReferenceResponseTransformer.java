@@ -25,7 +25,7 @@ public class ReferenceResponseTransformer implements ResponseDefinitionTransform
 
     @Override
     public ResponseDefinition transform(ServeEvent event) {
-        String folder = event.getTransformerParameters().getString("folder");
+        String folder = event.getTransformerParameters().getString("folder", null);
         if (folder == null || folder.isBlank()) return error(500, "MOCK_CONFIGURATION_ERROR", "Unknown mock domain");
         MockDomain domain = MockDomain.forFolder(folder);
 
